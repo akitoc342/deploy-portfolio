@@ -12,7 +12,7 @@
     cmd: bash -lc "yarn add yarn"
     chdir: /home/ec2-user/raisetech-live8-sample-app/
     
-#データベース設定のファイルをコピー 　
+#データベース設定のファイルをコピー 
 - name: edit database.yml
   template: 
     src: templates/database.yml
