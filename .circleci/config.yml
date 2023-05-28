@@ -89,13 +89,11 @@ jobs:
 
     dependencies:
       pre:
-        - sudo pip install ansible
+        sudo pip install ansible
 
     test:
-      
-
       override:
-        - aws ec2 create-image --name $AMI_NAME-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
+        aws ec2 create-image --name $AMI_NAME-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
 
 
 workflows:
