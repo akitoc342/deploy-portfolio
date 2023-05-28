@@ -87,10 +87,6 @@ jobs:
         SSH_USER: ec2-user
         AMI_NAME: ami-ci
 
-    dependencies:
-      pre:
-        sudo pip install ansible
-
     test:
       override:
         aws ec2 create-image --name $AMI_NAME-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
