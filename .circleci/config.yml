@@ -31,22 +31,7 @@ jobs:
             aws cloudformation deploy --template cloudformation/lecture10SG.yml --stack-name SGtest
             aws cloudformation deploy --template cloudformation/lecture10EC2.yml --stack-name EC2test2
 
-      - run:
-          name: RDS endpoint set
-          command: |
-            mkdir -p /tmp/workspace
-            RDS_ENDPOINT=$(aws rds describe-db-instances \
-              --db-instance-identifier cloudformationRDS \
-              --query "DBInstances[*].Endpoint.Address" \
-              --output text > /tmp/workspace/rds-endpoint.txt)
-            cat /tmp/workspace/rds-endpoint.txt
-            aws elbv2 describe-load-balancers --names cloudformationALB --query "LoadBalancers[].DNSName" --output text> /tmp/workspace/alb-dns.txt
-
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - rds-endpoint.txt
-            - alb-dns.txt
+      
   executeAnsible:
     executor: ansible-playbook/default
     steps:
@@ -67,14 +52,7 @@ jobs:
             echo export ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID >> $BASH_ENV
             echo export SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY >> $BASH_ENV
             source $BASH_ENV
-
-      - attach_workspace:
-          at: /tmp/workspace
-      - run: cat /tmp/workspace/rds-endpoint.txt
-      - run: cat /tmp/workspace/alb-dns.txt
-      - ansible-playbook/playbook:
-          playbook: ansible/playbook.yml
-          playbook-options: '-u ec2-user -i ansible/hosts/inventory --private-key ~/.ssh/id_rsa --extra-vars "RDS_ENDPOINT=$(cat /tmp/workspace/rds-endpoint.txt)" --extra-vars "ALB_DNS=$(cat /tmp/workspace/alb-dns.txt)"'
+    
 
   executeServerspec:
     docker:
@@ -96,6 +74,55 @@ jobs:
             gem install ed25519
             gem install bcrypt_pbkdf
             env ALB_DNS=$(cat /tmp/workspace/alb-dns.txt) rake spec
+  build:
+    machine:
+      timezone: Asia/Tokyo
+      ruby:
+        version:
+          2.1.2
+      environment:
+        AWS_AMI_ID: ami-06ee4e2261a4dc5c3
+        AWS_INSTANCE_TYPE: t2.micro
+        AWS_CF_STACK_NAME: ci-test
+        SSH_USER: ec2-user
+        AMI_NAME: ami-ci
+
+    dependencies:
+      pre:
+        - sudo pip install ansible
+
+    test:
+      pre:
+        - aws cloudformation create-stack --stack-name $AWS_CF_STACK_NAME --template-body file://ami-ci.cform --parameters ParameterKey=KeyName,ParameterValue=$AWS_KEY_NAME ParameterKey=ImageId,ParameterValue=$AWS_AMI_ID ParameterKey=InstanceType,ParameterValue=$AWS_INSTANCE_TYPE
+        - aws cloudformation wait stack-create-complete --stack-name $AWS_CF_STACK_NAME
+        - aws cloudformation describe-stacks --stack-name $AWS_CF_STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PublicIP") | .OutputValue' > /tmp/publicip.txt
+        - aws cloudformation describe-stacks --stack-name $AWS_CF_STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "InstanceId") | .OutputValue' > /tmp/instanceid.txt
+        - echo "`cat /tmp/publicip.txt` testserver" >> /tmp/hosts.txt
+        - cp /etc/hosts .
+        - sudo bash -c "cat hosts /tmp/hosts.txt | tee /etc/hosts"
+        - echo "Host testserver" >> ~/.ssh/config
+        - echo "User $SSH_USER" >> ~/.ssh/config
+        - ssh -t $SSH_USER@testserver sudo yum update -y
+        - ssh -t $SSH_USER@testserver sudo yum install epel-release -y
+        - ansible-playbook -i ansible/hosts ansible/nginx.yml
+
+      override:
+        - aws ec2 create-image --name $AMI_NAME-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
+        - sleep 300
+        - aws cloudformation create-stack --stack-name ${AWS_CF_STACK_NAME}-2 --template-body file://ami-ci.cform --parameters ParameterKey=KeyName,ParameterValue=$AWS_KEY_NAME ParameterKey=ImageId,ParameterValue=`cat /tmp/imageid.txt` ParameterKey=InstanceType,ParameterValue=$AWS_INSTANCE_TYPE
+        - aws cloudformation wait stack-create-complete --stack-name ${AWS_CF_STACK_NAME}-2
+        - aws cloudformation describe-stacks --stack-name ${AWS_CF_STACK_NAME}-2 | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PublicIP") | .OutputValue' > /tmp/publicip.txt
+        - echo "`cat /tmp/publicip.txt` amitestserver" >> /tmp/hosts2.txt
+        - cp /etc/hosts .
+        - sudo bash -c "cat hosts /tmp/hosts2.txt | tee /etc/hosts"
+        - echo "Host amitestserver" >> ~/.ssh/config
+        - echo "User $SSH_USER" >> ~/.ssh/config
+        - bundle exec rake spec:amitestserver
+      post:
+        - aws cloudformation delete-stack --stack-name $AWS_CF_STACK_NAME
+        - aws cloudformation delete-stack --stack-name ${AWS_CF_STACK_NAME}-2
+        - aws ec2 create-tags --resources `cat /tmp/imageid.txt` --tags Key=commitId,Value=`git log -n 1 --format=%H` Key=Name,Value=ami-ci-`git log -n 1 --format=%H` Key=Name,Value=$AMI_NAME
+
 
 workflows:
   raisetech:
@@ -110,3 +137,6 @@ workflows:
       - executeServerspec:
           requires:
             - executeAnsible
+      - build:
+          requires:
+            - executeServerspec
