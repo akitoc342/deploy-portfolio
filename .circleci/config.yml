@@ -74,22 +74,13 @@ jobs:
             gem install ed25519
             gem install bcrypt_pbkdf
             env ALB_DNS=$(cat /tmp/workspace/alb-dns.txt) rake spec
+
   build:
     machine:
-      timezone: Asia/Tokyo
-      ruby:
-        version:
-          2.1.2
-      environment:
-        AWS_AMI_ID: ami-06ee4e2261a4dc5c3
-        AWS_INSTANCE_TYPE: t2.micro
-        AWS_CF_STACK_NAME: ci-test
-        SSH_USER: ec2-user
-        AMI_NAME: ami-ci
+      image: ubuntu-2204:2023.04.2
+    steps:
+      - checkout
 
-    test:
-      override:
-        aws ec2 create-image --name $AMI_NAME-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
 
 
 workflows:
