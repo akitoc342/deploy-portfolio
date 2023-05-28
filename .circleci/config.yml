@@ -29,7 +29,7 @@ jobs:
             set -x
             aws cloudformation deploy --template cloudformation/lecture10VPC.yml --stack-name VPCtest
             aws cloudformation deploy --template cloudformation/lecture10SG.yml --stack-name SGtest
-            aws cloudformation deploy --template cloudformation/lecture10EC2.yml --stack-name EC2test2
+            aws cloudformation deploy --template cloudformation/lecture10EC2.yml --stack-name EC2test2 | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "InstanceId") | .OutputValue' > /tmp/instanceid.txt
 
       
   executeAnsible:
@@ -92,36 +92,10 @@ jobs:
         - sudo pip install ansible
 
     test:
-      pre:
-        - aws cloudformation create-stack --stack-name $AWS_CF_STACK_NAME --template-body file://ami-ci.cform --parameters ParameterKey=KeyName,ParameterValue=$AWS_KEY_NAME ParameterKey=ImageId,ParameterValue=$AWS_AMI_ID ParameterKey=InstanceType,ParameterValue=$AWS_INSTANCE_TYPE
-        - aws cloudformation wait stack-create-complete --stack-name $AWS_CF_STACK_NAME
-        - aws cloudformation describe-stacks --stack-name $AWS_CF_STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PublicIP") | .OutputValue' > /tmp/publicip.txt
-        - aws cloudformation describe-stacks --stack-name $AWS_CF_STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "InstanceId") | .OutputValue' > /tmp/instanceid.txt
-        - echo "`cat /tmp/publicip.txt` testserver" >> /tmp/hosts.txt
-        - cp /etc/hosts .
-        - sudo bash -c "cat hosts /tmp/hosts.txt | tee /etc/hosts"
-        - echo "Host testserver" >> ~/.ssh/config
-        - echo "User $SSH_USER" >> ~/.ssh/config
-        - ssh -t $SSH_USER@testserver sudo yum update -y
-        - ssh -t $SSH_USER@testserver sudo yum install epel-release -y
-        - ansible-playbook -i ansible/hosts ansible/nginx.yml
+      
 
       override:
         - aws ec2 create-image --name $AMI_NAME-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
-        - sleep 300
-        - aws cloudformation create-stack --stack-name ${AWS_CF_STACK_NAME}-2 --template-body file://ami-ci.cform --parameters ParameterKey=KeyName,ParameterValue=$AWS_KEY_NAME ParameterKey=ImageId,ParameterValue=`cat /tmp/imageid.txt` ParameterKey=InstanceType,ParameterValue=$AWS_INSTANCE_TYPE
-        - aws cloudformation wait stack-create-complete --stack-name ${AWS_CF_STACK_NAME}-2
-        - aws cloudformation describe-stacks --stack-name ${AWS_CF_STACK_NAME}-2 | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PublicIP") | .OutputValue' > /tmp/publicip.txt
-        - echo "`cat /tmp/publicip.txt` amitestserver" >> /tmp/hosts2.txt
-        - cp /etc/hosts .
-        - sudo bash -c "cat hosts /tmp/hosts2.txt | tee /etc/hosts"
-        - echo "Host amitestserver" >> ~/.ssh/config
-        - echo "User $SSH_USER" >> ~/.ssh/config
-        - bundle exec rake spec:amitestserver
-      post:
-        - aws cloudformation delete-stack --stack-name $AWS_CF_STACK_NAME
-        - aws cloudformation delete-stack --stack-name ${AWS_CF_STACK_NAME}-2
-        - aws ec2 create-tags --resources `cat /tmp/imageid.txt` --tags Key=commitId,Value=`git log -n 1 --format=%H` Key=Name,Value=ami-ci-`git log -n 1 --format=%H` Key=Name,Value=$AMI_NAME
 
 
 workflows:
