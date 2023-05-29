@@ -31,6 +31,8 @@ jobs:
             aws cloudformation deploy --template cloudformation/lecture10SG.yml --stack-name SGtest
             aws cloudformation deploy --template cloudformation/lecture10EC2.yml --stack-name EC2test2
             aws cloudformation describe-stacks --stack-name EC2test2 | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "InstanceId") | .OutputValue' > /tmp/instanceid.txt
+      - store_artifacts:
+          path: /tmp/imageid.txt
 
       
   executeAnsible:
@@ -86,6 +88,8 @@ jobs:
           command: |
             aws ec2 create-image --name ami-ci-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
             sleep 300
+      - store_artifacts:
+          path: /tmp/imageid.txt
 
 
 workflows:
