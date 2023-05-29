@@ -32,7 +32,7 @@ jobs:
             aws cloudformation deploy --template cloudformation/lecture10EC2.yml --stack-name EC2test2
             aws cloudformation describe-stacks --stack-name EC2test2 | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "InstanceId") | .OutputValue' > /tmp/instanceid.txt
       - store_artifacts:
-          path: /tmp/imageid.txt
+          path: /tmp/instanceid.txt
 
       
   executeAnsible:
