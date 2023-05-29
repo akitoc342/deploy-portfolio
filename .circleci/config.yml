@@ -74,14 +74,15 @@ jobs:
             gem install rake
             gem install ed25519
             gem install bcrypt_pbkdf
-            env ALB_DNS=$(cat /tmp/workspace/alb-dns.txt) rake spec
+            rake spec
 
   build:
     machine:
       image: ubuntu-2204:2023.04.2
     steps:
       - checkout
-
+      - aws ec2 create-image --name ami-ci-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
+      - sleep 300
 
 
 workflows:
