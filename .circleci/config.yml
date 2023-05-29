@@ -76,14 +76,19 @@ jobs:
             gem install bcrypt_pbkdf
             rake spec
 
-  build:
-    machine:
-      image: ubuntu-2204:2023.04.2
+  createAMI:
     executor: aws-cli/default
     steps:
       - checkout
-      - aws ec2 create-image --name ami-ci-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
-      - sleep 300
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_DEFAULT_REGION
+      - run: 
+          name: deploy Cloudformation
+          command: |
+            aws ec2 create-image --name ami-ci-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
+            sleep 300
 
 
 workflows:
@@ -99,6 +104,6 @@ workflows:
       - executeServerspec:
           requires:
             - executeAnsible
-      - build:
+      - createAMI:
           requires:
             - executeServerspec
