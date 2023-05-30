@@ -99,7 +99,7 @@ jobs:
           name: create AMI
           command: |
             aws ec2 create-image \
-              --instance-id ${EC2_INSTANCE_ID} \
+              --instance-id $EC2_INSTANCE_ID \
 
 workflows:
   raisetech:
