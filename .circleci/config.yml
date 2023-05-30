@@ -83,8 +83,9 @@ jobs:
             gem install bcrypt_pbkdf
             rake spec
 
-  createAMI:
-    executor: docker
+  build: createAMI
+    docker:
+      - image: 'cimg/base:stable'
     steps:
       - checkout
       - attach_workspace:
