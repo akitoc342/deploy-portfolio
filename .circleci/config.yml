@@ -98,10 +98,8 @@ jobs:
       - run: 
           name: create AMI
           command: |
-            aws ec2 create-image --name ami-ci-`git log -n 1 --format=%H` --instance-id `${EC2_INSTANCE_ID}` | jq -r '.ImageId' > /tmp/imageid.txt
+            aws ec2 create-image --instance-id ${EC2_INSTANCE_ID} --name myFirstAMIImag
             sleep 300
-      - store_artifacts:
-          path: /tmp/imageid.txt
 
 
 
