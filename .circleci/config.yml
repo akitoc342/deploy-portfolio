@@ -34,7 +34,7 @@ jobs:
           name: set environment variable
           command: |
             set -x
-            echo export EC2_INSTANCE_ID="$(jq -r '.Stacks[].Outputs[] | select(.OutputKey == "InstanceId") | .OutputValue')" >> $BASH_ENV
+            echo export EC2INSTANCEID="$(jq -r '.Stacks[].Outputs[] | select(.OutputKey == "InstanceId") | .OutputValue')" >> $BASH_ENV
             source $BASH_ENV
       - run: |
           cp $BASH_ENV bash.env
@@ -100,7 +100,7 @@ jobs:
           name: create AMI
           command: |
             aws ec2 describe-images --image-ids ami-06ee4e2261a4dc5c3
-            export EC2_INSTANCE_ID
+            export EC2INSTANCEID
 
 workflows:
   raisetech:
