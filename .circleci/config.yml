@@ -101,6 +101,7 @@ jobs:
           command: |
             aws ec2 describe-images --image-ids ami-06ee4e2261a4dc5c3
             export EC2INSTANCEID
+            printenv EC2INSTANCEID
 
 workflows:
   raisetech:
