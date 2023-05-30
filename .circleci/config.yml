@@ -87,14 +87,14 @@ jobs:
     executor: aws-cli/default
     steps:
       - checkout
-       - attach_workspace:
-          at: .
-      - run: |
-          cat bash.env >> $BASH_ENV
       - aws-cli/setup:
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_DEFAULT_REGION
+       - attach_workspace:
+          at: .
+      - run: |
+          cat bash.env >> $BASH_ENV
       - run: 
           name: create AMI
           command: |
