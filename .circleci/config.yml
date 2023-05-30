@@ -99,8 +99,7 @@ jobs:
       - run: 
           name: create AMI
           command: |
-            aws ec2 create-image \
-                --instance-id $EC2_INSTANCE_ID \
+            aws ec2 describe-images --image-ids ami-06ee4e2261a4dc5c3
 
 workflows:
   raisetech:
