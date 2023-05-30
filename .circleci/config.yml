@@ -84,7 +84,7 @@ jobs:
             rake spec
 
   createAMI:
-    executor: aws-cli/default
+    executor: docker
     steps:
       - checkout
       - attach_workspace:
