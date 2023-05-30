@@ -98,8 +98,9 @@ jobs:
       - run: 
           name: create AMI
           command: |
-            aws ec2 create-image --instance-id ${EC2_INSTANCE_ID} --name myFirstAMIImag
-            sleep 300
+            aws ec2 create-image \
+              --instance-id ${EC2_INSTANCE_ID} \
+              --name citest \
 
 
 
