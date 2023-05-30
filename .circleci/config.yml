@@ -87,14 +87,18 @@ jobs:
     executor: aws-cli/default
     steps:
       - checkout
+       - attach_workspace:
+          at: .
+      - run: |
+          cat bash.env >> $BASH_ENV
       - aws-cli/setup:
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_DEFAULT_REGION
       - run: 
-          name: deploy Cloudformation
+          name: create AMI
           command: |
-            aws ec2 create-image --name ami-ci-`git log -n 1 --format=%H` --instance-id `cat /tmp/instanceid.txt` | jq -r '.ImageId' > /tmp/imageid.txt
+            aws ec2 create-image --name ami-ci-`git log -n 1 --format=%H` --instance-id `${EC2_INSTANCE_ID}` | jq -r '.ImageId' > /tmp/imageid.txt
             sleep 300
       - store_artifacts:
           path: /tmp/imageid.txt
