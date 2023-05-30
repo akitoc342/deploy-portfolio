@@ -87,7 +87,7 @@ jobs:
     executor: aws-cli/default
     steps:
       - checkout
-       - attach_workspace:
+      - attach_workspace:
           at: .
       - run: |
           cat bash.env >> $BASH_ENV
