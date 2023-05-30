@@ -91,13 +91,6 @@ jobs:
           at: .
       - run: |
           cat bash.env >> $BASH_ENV
-      - run: 
-          name: create AMI
-          command: |
-            aws ec2 create-image --name ami-ci-`git log -n 1 --format=%H` --instance-id `${EC2_INSTANCE_ID}` | jq -r '.ImageId' > /tmp/imageid.txt
-            sleep 300
-      - store_artifacts:
-          path: /tmp/imageid.txt
 
 
 workflows:
