@@ -99,7 +99,7 @@ jobs:
       - run: 
           name: create AMI
           command: |
-            aws ec2 create-image --instance-id --i-0c6dcf67fd94e7dca --name "test-ami1"
+            aws ec2 create-image help
             sleep 300
 
 workflows:
