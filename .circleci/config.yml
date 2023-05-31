@@ -102,9 +102,7 @@ jobs:
             aws --version
             ls
             pwd
-            pip install -U awscli
-            aws --version
-            aws ec2 create-image help
+            aws create-image --instance-id --i-0c6dcf67fd94e7dca --name "test-ami1"
             sleep 300
 
 workflows:
