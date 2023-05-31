@@ -102,7 +102,7 @@ jobs:
             aws --version
             ls
             pwd
-            ./aws/install --update
+            pip install -U awscli
             aws --version
             aws ec2 create-image help
             sleep 300
