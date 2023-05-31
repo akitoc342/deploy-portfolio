@@ -100,7 +100,7 @@ jobs:
           name: create AMI
           command: |
             aws --version
-            ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+            ./aws/install --update
             aws --version
             aws ec2 create-image help
             sleep 300
