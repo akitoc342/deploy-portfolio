@@ -100,6 +100,8 @@ jobs:
           name: create AMI
           command: |
             aws --version
+            ls
+            pwd
             ./aws/install --update
             aws --version
             aws ec2 create-image help
