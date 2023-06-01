@@ -30,6 +30,13 @@ jobs:
             aws cloudformation deploy --template cloudformation/lecture10VPC.yml --stack-name VPCtest
             aws cloudformation deploy --template cloudformation/lecture10SG.yml --stack-name SGtest
             aws cloudformation deploy --template cloudformation/lecture10EC2.yml --stack-name EC2test2
+      - run:
+          name: instanceid set
+          command: |
+            mkdir -p /tmp/workspace
+            aws ec2 describe-instances --instance-ids --query "EC2[].instanceid" --output text > /tmp/instanceid.txt
+      - store_artifacts:
+          path: /tmp/instanceid.txt
       - run: 
           name: set environment variable
           command: |
