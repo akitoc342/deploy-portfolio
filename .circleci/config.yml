@@ -37,6 +37,11 @@ jobs:
             aws ec2 describe-instances --filters "Name=tag:Name,Values=cloudformationEC2*" --query "Reservations[].Instances[].InstanceId" --output text > /tmp/instanceid.txt
       - store_artifacts:
           path: /tmp/instanceid.txt
+      
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - instanceid.txt
       - run: 
           name: set environment variable
           command: |
