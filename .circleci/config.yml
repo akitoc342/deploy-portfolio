@@ -35,7 +35,7 @@ jobs:
           command: |
             set -x
             aws cloudformation describe-stacks --stack-name EC2test2
-            echo export EC2INSTANCEID="$(aws cloudformation describe-stacks --stack-name EC2test2 | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "OutputValue") | .OutputValue')" >> $BASH_ENV
+            echo export EC2INSTANCEID="$(aws cloudformation describe-stacks --stack-name EC2test2 | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "EC2 ID") | .OutputValue')" >> $BASH_ENV
             source $BASH_ENV
       - run: |
           cp $BASH_ENV bash.env
