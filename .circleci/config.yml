@@ -34,7 +34,7 @@ jobs:
           name: instanceid set
           command: |
             mkdir -p /tmp/workspace
-            aws ec2 describe-instances --instance-ids --query "EC2[].instanceid" --output text > /tmp/instanceid.txt
+            aws ec2 describe-instances  | jq '.Reservations[].Instances[].InstanceId' --output text > /tmp/instanceid.txt
       - store_artifacts:
           path: /tmp/instanceid.txt
       - run: 
