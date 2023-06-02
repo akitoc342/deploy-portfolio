@@ -104,7 +104,8 @@ jobs:
       - run: 
           name: output EC2-AMIID
           command: |
-            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query "Reserations[].Images[].ImageId" --output text > /tmp/workspace/amiid.txt
+            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --output text > /tmp/workspace/amiid.txt
+            --output table
       - store_artifacts:
           path: /tmp/amiid.txt
       
