@@ -42,19 +42,6 @@ jobs:
           root: /tmp/workspace
           paths:
             - instanceid.txt
-      - run: 
-          name: set environment variable
-          command: |
-            set -x
-            aws cloudformation describe-stacks --stack-name EC2test2
-            echo export EC2INSTANCEID="$(aws cloudformation describe-stacks --stack-name EC2test2 | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "EC2 ID") | .OutputValue')" >> $BASH_ENV
-            source $BASH_ENV
-      - run: |
-          cp $BASH_ENV bash.env
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bash.env
       
   executeAnsible:
     executor: ansible-playbook/default
@@ -102,9 +89,8 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: .
-      - run: |
-          cat bash.env >> $BASH_ENV
+          at: /tmp/workspace
+      - run: cat /tmp/workspace/instanceid.txt
       - aws-cli/setup:
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
@@ -112,7 +98,7 @@ jobs:
       - run: 
           name: create AMI
           command: |
-            aws ec2 create-image --instance-id ${EC2INSTANCEID} --name "test-ami2"
+            aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "test-ami2"
             sleep 300
 
 workflows:
