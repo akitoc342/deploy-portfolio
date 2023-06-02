@@ -98,7 +98,7 @@ jobs:
           aws-region: AWS_DEFAULT_REGION
       
       - run: 
-          name: create AMI
+          name: createAMI
           command: |
             aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami}]'
       - run: 
