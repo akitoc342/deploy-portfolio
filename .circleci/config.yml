@@ -105,7 +105,6 @@ jobs:
           name: output EC2-AMIID
           command: |
             aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*"
-            --output table
       - store_artifacts:
           path: /tmp/amiid.txt
       
