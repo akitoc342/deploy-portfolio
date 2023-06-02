@@ -96,6 +96,7 @@ jobs:
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_DEFAULT_REGION
+      
       - run: 
           name: create AMI
           command: |
@@ -103,7 +104,7 @@ jobs:
       - run: 
           name: output EC2-AMIID
           command: |
-            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query "Reservations[].Instances[].InstanceId" --output text > /tmp/workspace/amiid.txt
+            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'reverse[].[Name,ImageId,CreationDate]' --output text > /tmp/workspace/amiid.txt
       - store_artifacts:
           path: /tmp/amiid.txt
       
