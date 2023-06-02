@@ -99,8 +99,18 @@ jobs:
       - run: 
           name: create AMI
           command: |
-            aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "test-ami2"
-            sleep 300
+            aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami"
+      - run: 
+          name: output AMIID
+          command: |
+            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query "Reservations[].Instances[].InstanceId" --output text > /tmp/workspace/amiid.txt
+      - store_artifacts:
+          path: /tmp/amiid.txt
+      
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - amiid.txt
 
 workflows:
   raisetech:
