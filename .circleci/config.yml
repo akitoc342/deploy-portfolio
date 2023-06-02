@@ -35,6 +35,7 @@ jobs:
           command: |
             mkdir -p /tmp/workspace
             aws ec2 describe-instances --filters "Name=tag:Name,Values=cloudformationEC2*" --query "Reservations[].Instances[].InstanceId" --output text > /tmp/instanceid.txt
+            cat /tmp/workspace/instanceid.txt
       - store_artifacts:
           path: /tmp/instanceid.txt
       
