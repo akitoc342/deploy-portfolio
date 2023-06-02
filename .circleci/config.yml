@@ -37,7 +37,7 @@ jobs:
             aws ec2 describe-instances --filters "Name=tag:Name,Values=cloudformationEC2*" --query "Reservations[].Instances[].InstanceId" --output text > /tmp/workspace/instanceid.txt
             cat /tmp/workspace/instanceid.txt
       - store_artifacts:
-          path: /tmp/instanceid.txt
+          path: /tmp/workspace/instanceid.txt
       
       - persist_to_workspace:
           root: /tmp/workspace
@@ -104,9 +104,9 @@ jobs:
       - run: 
           name: output EC2-AMIID
           command: |
-            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Images[].{ImageId}' --output text > /tmp/workspace/amiid.txt
+            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Images[].{Id1:ImageId}' --output text > /tmp/workspace/amiid.txt
       - store_artifacts:
-          path: /tmp/amiid.txt
+          path: /tmp/workspace/amiid.txt
       
       - persist_to_workspace:
           root: /tmp/workspace
