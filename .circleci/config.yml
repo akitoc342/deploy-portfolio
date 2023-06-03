@@ -96,11 +96,6 @@ jobs:
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_DEFAULT_REGION
-      - run:
-          name: delate old AMIandsnapshot
-          command: |
-            aws ec2 deregister-image --image-id --filters "Name=tag:Name,Values=AutoScaling-ami*"
-            aws ec2 delete-snapshot --snapshot-id --filters "Name=tag:Name,Values=AutoScaling-ami*"
       - run: 
           name: createAMI
           command: |
@@ -111,6 +106,11 @@ jobs:
             aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Images[].{Id1:ImageId}' --output text > /tmp/workspace/amiid.txt
       - store_artifacts:
           path: /tmp/workspace/amiid.txt
+
+      - run:
+          name: check image_snapshot
+            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*"
+            aws ec2 describe-snapshots --filters "Name=tag:Name,Values=AutoScaling-ami*"
       
       - persist_to_workspace:
           root: /tmp/workspace
