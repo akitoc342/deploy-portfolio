@@ -102,7 +102,7 @@ jobs:
           command: |
             aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami}]'
       - run: 
-          name: output EC2-AMIID
+          name: outputEC2-AMIID
           command: |
             aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Images[].{Id1:ImageId}' --output text > /tmp/workspace/amiid.txt
       - store_artifacts:
