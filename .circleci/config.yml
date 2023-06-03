@@ -99,11 +99,11 @@ jobs:
       - run: 
           name: createAMI
           command: |
-            aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt)
+            aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]'
       - run: 
           name: outputEC2-AMIID
           command: |
-            aws ec2 describe-images --owners 818760568068 --query 'Images[].{Id1:ImageId}' --output text > /tmp/workspace/amiid.txt
+            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Images[].{Id1:ImageId}' --output text > /tmp/workspace/amiid.txt
       - store_artifacts:
           path: /tmp/workspace/amiid.txt
 
