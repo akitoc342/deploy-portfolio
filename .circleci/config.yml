@@ -104,7 +104,7 @@ jobs:
       - run: 
           name: createAMI
           command: |
-            aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami}]'
+            aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]'
       - run: 
           name: outputEC2-AMIID
           command: |
