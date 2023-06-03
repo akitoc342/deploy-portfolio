@@ -83,7 +83,7 @@ jobs:
             gem install ed25519
             gem install bcrypt_pbkdf
             rake spec
-
+#アプリデプロイ後のAMIの作成
   createAMI:
     docker:
       - image: 'cimg/base:stable'
@@ -99,8 +99,8 @@ jobs:
       - run:
           name: delate old AMIandsnapshot
           command: |
-            aws ec2 deregister-image --filters "Name=tag:Name,Values=AutoScaling-ami*"
-            aws ec2 delete-snapshot --filters "Name=tag:Name,Values=AutoScaling-ami*"
+            aws ec2 deregister-image --image-id --filters "Name=tag:Name,Values=AutoScaling-ami*"
+            aws ec2 delete-snapshot --snapshot-id --filters "Name=tag:Name,Values=AutoScaling-ami*"
       - run: 
           name: createAMI
           command: |
