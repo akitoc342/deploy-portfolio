@@ -97,10 +97,10 @@ jobs:
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_DEFAULT_REGION
       - run:
-          name: position
+          name: check image_snapshot
           command: |
-            ls
-            pwd
+            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*"
+            aws ec2 describe-snapshots --filters "Name=tag:Name,Values=AutoScaling-ami*"
       - run: 
           name: createAMI
           command: |
@@ -111,12 +111,6 @@ jobs:
             aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Images[].{Id1:ImageId}' --output text > /tmp/workspace/amiid.txt
       - store_artifacts:
           path: /tmp/workspace/amiid.txt
-
-      - run:
-          name: check image_snapshot
-          command: |
-            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*"
-            aws ec2 describe-snapshots --filters "Name=tag:Name,Values=AutoScaling-ami*"
       
       - persist_to_workspace:
           root: /tmp/workspace
