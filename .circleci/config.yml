@@ -101,8 +101,7 @@ jobs:
           command: |
             aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --output text > /tmp/workspace/deleteamiid.txt
             aws ec2 describe-snapshots --filters "Name=tag:Name,Values=AutoScaling-ami*" --output text > /tmp/workspace/deletesnapshotid.txt
-            aws ec2 deregister-image --image $(cat /tmp/workspace/deleteamiid.txt)
-            aws ec2 delete-snapshot --snapshot-id $(cat /tmp/workspace/deletesnapshotid.txt)
+            aws ec2 deregister-image --image $(cat /tmp/workspace/deleteamiid.txt) || aws ec2 delete-snapshot --snapshot-id $(cat /tmp/workspace/deletesnapshotid.txt) || aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]'
       - run: 
           name: createAMI
           command: |
