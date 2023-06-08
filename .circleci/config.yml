@@ -104,8 +104,8 @@ jobs:
       - run:
           name: deleteAMI_snapshot
           command: |
-            $(cat /tmp/workspace/deleteamiid.txt) != null && aws ec2 deregister-image --image $(cat /tmp/workspace/deleteamiid.txt)
-            $(cat /tmp/workspace/deletesnapshotid.txt) != null && aws ec2 delete-snapshot --snapshot-id $(cat /tmp/workspace/deletesnapshotid.txt)
+            $(cat /tmp/workspace/deleteamiid.txt) == null || aws ec2 deregister-image --image $(cat /tmp/workspace/deleteamiid.txt)
+            $(cat /tmp/workspace/deletesnapshotid.txt) == null || aws ec2 delete-snapshot --snapshot-id $(cat /tmp/workspace/deletesnapshotid.txt)
       - run: 
           name: createAMI
           command: |
