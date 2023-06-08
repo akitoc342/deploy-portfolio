@@ -103,7 +103,7 @@ jobs:
             aws ec2 describe-snapshots --filters "Name=tag:Name,Values=AutoScaling-ami*" --output text > /tmp/workspace/deletesnapshotid.txt
       - store_artifacts:
           path: /tmp/workspace/deleteamiid.txt
-          path: /tmp/workspace/deletesnapshotid.txt
+                /tmp/workspace/deletesnapshotid.txt
       - run:
           name: createAMI
           command: |
