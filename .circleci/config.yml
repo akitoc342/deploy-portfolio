@@ -110,6 +110,8 @@ jobs:
               pwd
               ls /tmp/workspace/deleteamiid.txt
               echo $(cat /tmp/workspace/deleteamiid.txt)
+              cat /tmp/workspace/deleteamiid.txt
+              $(cat /tmp/workspace/deleteamiid.txt) == null
       - run:
           name: deleteAMI_snapshot
           command: |
