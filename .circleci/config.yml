@@ -106,8 +106,6 @@ jobs:
       - run:
           name: check position
           command: |
-            test -s /tmp/workspace/deleteamiid.txt; echo $? && aws ec2 deregister-image --image $(cat /tmp/workspace/deleteamiid.txt)
-            test -s /tmp/workspace/deletesnapshotid.txt; echo $? && aws ec2 delete-snapshot --snapshot-id $(cat /tmp/workspace/deletesnapshotid.txt)
             test -s /tmp/workspace/deleteamiid.txt; echo $? || aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]'
       - run:
           name: deleteAMI_snapshot
