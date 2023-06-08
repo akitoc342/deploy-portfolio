@@ -111,6 +111,16 @@ jobs:
               ls /tmp/workspace/deleteamiid.txt
               echo $(cat /tmp/workspace/deleteamiid.txt)
               cat /tmp/workspace/deleteamiid.txt
+
+              FILE=/tmp/workspace/deleteamiid.txt
+              
+              if [ ! -s $FILE ]; then
+#空の場合の処理
+                echo "$FILE は0byte"
+              else
+# 0byte 以上の処理
+              ls -l $FILE
+              fi
               ls /tmp/workspace/amiid.txt
       - run:
           name: deleteAMI_snapshot
