@@ -101,7 +101,7 @@ jobs:
           command: |
             aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --output text > /tmp/workspace/deleteamiid.txt
             aws ec2 describe-snapshots --filters "Name=tag:Name,Values=AutoScaling-ami*" --output text > /tmp/workspace/deletesnapshotid.txt
-        - run:
+      - run:
           name: check position
           command: |
               ls
