@@ -58,7 +58,7 @@ jobs:
           command: |
             echo "$ANSIBLE_VAULT_PASSWORD" > env.txt
       - store_artifacts:
-          path: /tmp/workspace/env.txt
+          path: env.txt
       - run: 
           name: ACCESS KEY setting
           command: |
