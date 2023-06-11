@@ -1,0 +1,139 @@
+version: 2.1
+orbs:
+  python: circleci/python@2.0.3
+  aws-cli: circleci/aws-cli@3.1.4
+  ansible-playbook: orbss/ansible-playbook@0.0.5
+  ruby: circleci/ruby@2.0.0
+
+jobs:
+  cfn-lint:
+    executor: python/default
+    steps:
+      - checkout
+      - run: pip install cfn-lint
+      - run:
+          name: run cfn-lint
+          command: |
+            cfn-lint -i W3002 -t cloudformation/*.yml
+  executeCloudFormation:
+    executor: aws-cli/default
+    steps:
+      - checkout
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_DEFAULT_REGION
+      - run: 
+          name: deploy Cloudformation
+          command: |
+            set -x
+            aws cloudformation deploy --template cloudformation/lecture10VPC.yml --stack-name VPCtest
+            aws cloudformation deploy --template cloudformation/lecture10SG.yml --stack-name SGtest
+            aws cloudformation deploy --template cloudformation/lecture10EC2.yml --stack-name EC2test2
+      - run:
+          name: instanceid set
+          command: |
+            mkdir -p /tmp/workspace
+            aws ec2 describe-instances --filters "Name=tag:Name,Values=cloudformationEC2*" --query "Reservations[].Instances[].InstanceId" --output text > /tmp/workspace/instanceid.txt
+            cat /tmp/workspace/instanceid.txt
+      - store_artifacts:
+          path: /tmp/workspace/instanceid.txt
+      
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - instanceid.txt
+      
+  executeAnsible:
+    executor: ansible-playbook/default
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - 66:73:7c:32:df:2a:c0:21:90:ab:eb:09:27:28:a7:50
+      - ansible-playbook/install:
+          version: '2.10.7'
+      - run: 
+          name: vaultpass setting
+          command: |
+            echo "$ANSIBLE_VAULT_PASSWORD" > env.txt
+      - run: 
+          name: ACCESS KEY setting
+          command: |
+            set -x
+            echo export ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID >> $BASH_ENV
+            echo export SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY >> $BASH_ENV
+            source $BASH_ENV
+    
+
+  executeServerspec:
+    docker:
+      - image: 'cimg/base:stable'
+    steps:
+      - checkout
+      - ruby/install:
+          version: '3.1.2'
+      - run:
+          name: executeServerspec
+          command: |
+            cd serverSpec
+            gem install bundler
+            gem install serverspec
+            gem install rake
+            gem install ed25519
+            gem install bcrypt_pbkdf
+            rake spec
+#アプリデプロイ後のAMIの作成
+  createAMI:
+    docker:
+      - image: 'cimg/base:stable'
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: cat /tmp/workspace/instanceid.txt
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_DEFAULT_REGION
+      - run:
+          name: check image_snapshot
+          command: |
+            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Images[].{Id1:ImageId}' --output text > /tmp/workspace/deleteamiid.txt
+            aws ec2 describe-snapshots --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Snapshots[].{Id1:SnapshotId}' --output text > /tmp/workspace/deletesnapshotid.txt
+      - store_artifacts:
+          path: /tmp/workspace/deleteamiid.txt
+      - run:
+          name: createAMI
+          command: |
+            test -s /tmp/workspace/deleteamiid.txt || aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]'
+            test -s /tmp/workspace/deleteamiid.txt && aws ec2 deregister-image --image-id $(cat /tmp/workspace/deleteamiid.txt)
+            test -s /tmp/workspace/deletesnapshotid.txt && aws ec2 delete-snapshot --snapshot-id $(cat /tmp/workspace/deletesnapshotid.txt) && aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]'
+      - run: 
+          name: outputEC2-AMIID
+          command: |
+            aws ec2 describe-images --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Images[].{Id1:ImageId}' --output text > /tmp/workspace/amiid.txt
+      - store_artifacts:
+          path: /tmp/workspace/amiid.txt
+      
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - amiid.txt
+
+workflows:
+  raisetech:
+    jobs:
+      - cfn-lint
+      - executeCloudFormation:
+          requires:
+            - cfn-lint
+      - executeAnsible:
+          requires:
+            - executeCloudFormation
+      - executeServerspec:
+          requires:
+            - executeAnsible
+      - createAMI:
+          requires:
+            - executeServerspec
