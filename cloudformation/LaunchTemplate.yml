@@ -15,7 +15,7 @@ Resources:
         SecurityGroupIds:
           - !ImportValue cloudformationSGEC2
         EbsOptimized: false
-        ImageId: ENV['AMI_ID']
+        ImageId: ami-0d739893974bd27d0
         InstanceType: t2.micro
         Monitoring:
           Enabled: true
