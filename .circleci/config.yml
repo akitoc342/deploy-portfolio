@@ -141,10 +141,14 @@ jobs:
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_DEFAULT_REGION
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: cat /tmp/workspace/amiid.txt
       - run: 
           name: deploy Cloudformation
           command: |
             set -x
+            env AMI_ID=$(cat /tmp/workspace/amiid.txt)
             aws cloudformation deploy --template cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest
 
 
