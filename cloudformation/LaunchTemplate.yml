@@ -4,8 +4,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
   Ec2ImageId:
     Type: AWS::EC2::Image::Id
-  SecurityGroupId:
-    Type: AWS::EC2::SecurityGroup::Id
 
 Resources:
   SampleLaunchTemplate:
