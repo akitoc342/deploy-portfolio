@@ -1,0 +1,27 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  Ec2ImageId:
+    Type: AWS::EC2::Image::Id
+  SecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+
+Resources:
+  SampleLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: sample-launchtemplate
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - Ebs:
+              VolumeSize: 8
+              VolumeType: gp2
+            DeviceName: /dev/xvda
+        SecurityGroupIds:
+          - !ImportValue cloudformationSGEC2
+        EbsOptimized: false
+        ImageId: !Ref Ec2ImageId
+        InstanceType: t2.micro
+        Monitoring:
+          Enabled: true
