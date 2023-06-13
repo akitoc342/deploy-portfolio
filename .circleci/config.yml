@@ -95,7 +95,7 @@ jobs:
             gem install ed25519
             gem install bcrypt_pbkdf
             env ALB_DNS=$(cat /tmp/workspace/alb-dns.txt) rake spec
-#アプリデプロイ後のAMIの作成
+#アプリデプロイ後のAMIの作成　
   createAMI:
     docker:
       - image: 'cimg/base:stable'
