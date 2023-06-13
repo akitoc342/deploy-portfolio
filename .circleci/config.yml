@@ -145,7 +145,6 @@ jobs:
           name: deploy Cloudformation
           command: |
             set -x
-            aws cloudformation deploy --template cloudformation/lecture10SG.yml --stack-name SGtest2
             aws cloudformation deploy --template cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest
 
 
