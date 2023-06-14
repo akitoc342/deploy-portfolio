@@ -115,12 +115,6 @@ jobs:
             aws ec2 describe-snapshots --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Snapshots[].{Id1:SnapshotId}' --output text > /tmp/workspace/deletesnapshotid.txt
       - store_artifacts:
           path: /tmp/workspace/deleteamiid.txt
-      - run:
-          name: createAMI
-          command: |
-            test -s /tmp/workspace/deleteamiid.txt || aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 
-            test -s /tmp/workspace/deleteamiid.txt && aws ec2 deregister-image --image-id $(cat /tmp/workspace/deleteamiid.txt)
-            test -s /tmp/workspace/deletesnapshotid.txt && aws ec2 delete-snapshot --snapshot-id $(cat /tmp/workspace/deletesnapshotid.txt) && aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]'
       - run: 
           name: outputEC2-AMIID
           command: |
@@ -153,8 +147,6 @@ jobs:
             env AMI_ID=$(cat /tmp/workspace/amiid.txt)
             aws cloudformation create-stack --template-body file:/home/circleci/project/cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest --parameters ParameterKey=EC2ImageId,ParameterValue=$(cat /tmp/workspace/amiid.txt)
             
-
-
 workflows:
   raisetech:
     jobs:
@@ -162,6 +154,9 @@ workflows:
       - executeCloudFormation:
           requires:
             - cfn-lint
-      - executeAdditionalCloudFormation:
+      - createAMI:
           requires:
             - executeCloudFormation
+      - executeAdditionalCloudFormation:
+          requires:
+            - createAMI
