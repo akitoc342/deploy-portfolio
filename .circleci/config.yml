@@ -162,15 +162,6 @@ workflows:
       - executeCloudFormation:
           requires:
             - cfn-lint
-      - executeAnsible:
-          requires:
-            - executeCloudFormation
-      - executeServerspec:
-          requires:
-            - executeAnsible
-      - createAMI:
-          requires:
-            - executeServerspec
       - executeAdditionalCloudFormation:
           requires:
-            - createAMI
+            - executeCloudFormation
