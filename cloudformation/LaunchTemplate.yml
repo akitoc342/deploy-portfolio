@@ -1,6 +1,10 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
 
+Parameters:
+  Ec2ImageId:
+    Type: AWS::EC2::Image::Id
+
 Resources:
   SampleLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
@@ -15,6 +19,7 @@ Resources:
         SecurityGroupIds:
           - !ImportValue cloudformationSGEC2
         EbsOptimized: false
+        ImageId: !Ref Ec2ImageId
         InstanceType: t2.micro
         Monitoring:
           Enabled: true
