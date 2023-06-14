@@ -149,7 +149,8 @@ jobs:
           command: |
             set -x
             env AMI_ID=$(cat /tmp/workspace/amiid.txt)
-            aws cloudformation deploy --template cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest
+            aws cloudformation create-stack --template-body cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest --parameters ParameterKey=ImageId,ParameterValue=$(cat /tmp/workspace/amiid.txt)
+            
 
 
 workflows:
