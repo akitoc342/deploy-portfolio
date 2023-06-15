@@ -145,8 +145,7 @@ jobs:
             pwd
             ls
             env AMI_ID=$(cat /tmp/workspace/amiid.txt)
-            aws cloudformation create-stack --template-body file:/home/ec2-user/deploy-portfolio/cloudformation/lecture10RDS.yml --stack-name RDStest
-            aws cloudformation create-stack --template-body file:/home/circleci/project/cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest --parameters ParameterKey=EC2ImageId,ParameterValue=$(cat /tmp/workspace/amiid.txt)
+            aws cloudformation create-stack --template-body file:ec2-user/deploy-portfolio/cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest --parameters ParameterKey=EC2ImageId,ParameterValue=$(cat /tmp/workspace/amiid.txt)
             
 workflows:
   raisetech:
