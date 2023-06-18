@@ -147,7 +147,8 @@ jobs:
             env AMI_ID=$(cat /tmp/workspace/amiid.txt)
             cat ~/.aws/credentials
             cat ~/.aws/config
-            aws cloudformation create-stack --template-body file:ec2-user/deploy-portfolio/cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest
+            aws cloudformation deploy --template cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest
+            aws cloudformation describe-stacks --stack-name LaunchTemplatetest
             
 workflows:
   raisetech:
