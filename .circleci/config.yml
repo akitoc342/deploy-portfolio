@@ -151,7 +151,7 @@ jobs:
             aws cloudformation describe-stacks --stack-name LaunchTemplatetest
             aws ec2 describe-launch-templates --launch-template-names sample-launchtemplate --query 'LaunchTemplates[].{Id1:LaunchTemplateId}' --output text > /tmp/workspace/LaunchTemplateId.txt
             aws ec2 describe-launch-template-versions --launch-template-id $(cat /tmp/workspace/LaunchTemplateId.txt)
-            
+            aws ec2 create-launch-template-version --launch-template-id $(cat /tmp/workspace/LaunchTemplateId.txt) --version-description version2 --source-version 1 --launch-template-data "ImageId=$(cat /tmp/workspace/amiid.txt)"
 workflows:
   raisetech:
     jobs:
