@@ -149,6 +149,7 @@ jobs:
             cat ~/.aws/config
             aws cloudformation deploy --template cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest
             aws cloudformation describe-stacks --stack-name LaunchTemplatetest
+            aws ec2 describe-launch-templates --launch-template-names sample-launchtemplate
             
 workflows:
   raisetech:
