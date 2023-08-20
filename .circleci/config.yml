@@ -30,6 +30,7 @@ jobs:
             aws cloudformation deploy --template cloudformation/lecture10VPC.yml --stack-name VPCtest
             aws cloudformation deploy --template cloudformation/lecture10SG.yml --stack-name SGtest
             aws cloudformation deploy --template cloudformation/lecture10EC2.yml --stack-name EC2test2
+            aws cloudformation deploy --template cloudformation/lecture10ALB.yml --stack-name ALBtest
       - run:
           name: instanceid set
           command: |
@@ -38,12 +39,16 @@ jobs:
             cat /tmp/workspace/instanceid.txt
       - store_artifacts:
           path: /tmp/workspace/instanceid.txt
-      
+      - run:
+          name: ALB DNS set
+          command: |
+            mkdir -p /tmp/workspace
+            aws elbv2 describe-load-balancers --names cloudformationALB --query "LoadBalancers[].DNSName" --output text> /tmp/workspace/alb-dns.txt
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
             - instanceid.txt
-      
+            - alb-dns.txt   
   executeAnsible:
     executor: ansible-playbook/default
     steps:
@@ -57,6 +62,8 @@ jobs:
           name: vaultpass setting
           command: |
             echo "$ANSIBLE_VAULT_PASSWORD" > env.txt
+      - store_artifacts:
+          path: env.txt
       - run: 
           name: ACCESS KEY setting
           command: |
@@ -64,7 +71,9 @@ jobs:
             echo export ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID >> $BASH_ENV
             echo export SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY >> $BASH_ENV
             source $BASH_ENV
-    
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: cat /tmp/workspace/alb-dns.txt
 
   executeServerspec:
     docker:
@@ -73,6 +82,9 @@ jobs:
       - checkout
       - ruby/install:
           version: '3.1.2'
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: cat /tmp/workspace/alb-dns.txt
       - run:
           name: executeServerspec
           command: |
@@ -82,7 +94,7 @@ jobs:
             gem install rake
             gem install ed25519
             gem install bcrypt_pbkdf
-            rake spec
+            env ALB_DNS=$(cat /tmp/workspace/alb-dns.txt) rake spec
 #アプリデプロイ後のAMIの作成
   createAMI:
     docker:
@@ -103,12 +115,6 @@ jobs:
             aws ec2 describe-snapshots --filters "Name=tag:Name,Values=AutoScaling-ami*" --query 'Snapshots[].{Id1:SnapshotId}' --output text > /tmp/workspace/deletesnapshotid.txt
       - store_artifacts:
           path: /tmp/workspace/deleteamiid.txt
-      - run:
-          name: createAMI
-          command: |
-            test -s /tmp/workspace/deleteamiid.txt || aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]'
-            test -s /tmp/workspace/deleteamiid.txt && aws ec2 deregister-image --image-id $(cat /tmp/workspace/deleteamiid.txt)
-            test -s /tmp/workspace/deletesnapshotid.txt && aws ec2 delete-snapshot --snapshot-id $(cat /tmp/workspace/deletesnapshotid.txt) && aws ec2 create-image --instance-id $(cat /tmp/workspace/instanceid.txt) --name "AutoScaling-ami" --tag-specifications 'ResourceType=image,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]' 'ResourceType=snapshot,Tags=[{Key=Name,Value=AutoScaling-ami},{Key=Protected,Value=false}]'
       - run: 
           name: outputEC2-AMIID
           command: |
@@ -121,6 +127,31 @@ jobs:
           paths:
             - amiid.txt
 
+  executeAdditionalCloudFormation:
+    executor: aws-cli/default
+    steps:
+      - checkout
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_DEFAULT_REGION
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: cat /tmp/workspace/amiid.txt
+      - run: 
+          name: deploy Cloudformation
+          command: |
+            set -x
+            pwd
+            ls
+            env AMI_ID=$(cat /tmp/workspace/amiid.txt)
+            cat ~/.aws/credentials
+            cat ~/.aws/config
+            aws cloudformation deploy --template cloudformation/LaunchTemplate.yml --stack-name LaunchTemplatetest
+            aws cloudformation describe-stacks --stack-name LaunchTemplatetest
+            aws ec2 describe-launch-templates --launch-template-names sample-launchtemplate --query 'LaunchTemplates[].{Id1:LaunchTemplateId}' --output text > /tmp/workspace/LaunchTemplateId.txt
+            aws ec2 describe-launch-template-versions --launch-template-id $(cat /tmp/workspace/LaunchTemplateId.txt)
+            aws ec2 create-launch-template-version --launch-template-id $(cat /tmp/workspace/LaunchTemplateId.txt) --version-description version2 --source-version 1 --launch-template-data "ImageId=$(cat /tmp/workspace/amiid.txt)"
 workflows:
   raisetech:
     jobs:
@@ -128,12 +159,9 @@ workflows:
       - executeCloudFormation:
           requires:
             - cfn-lint
-      - executeAnsible:
-          requires:
-            - executeCloudFormation
-      - executeServerspec:
-          requires:
-            - executeAnsible
       - createAMI:
           requires:
-            - executeServerspec
+            - executeCloudFormation
+      - executeAdditionalCloudFormation:
+          requires:
+            - createAMI

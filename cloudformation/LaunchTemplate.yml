@@ -1,0 +1,21 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  SampleLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: sample-launchtemplate
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - Ebs:
+              VolumeSize: 8
+              VolumeType: gp2
+            DeviceName: /dev/xvda
+        SecurityGroupIds:
+          - !ImportValue cloudformationSGEC2
+        EbsOptimized: false
+        ImageId: ami-0b51fe1c0254d8fc9
+        InstanceType: t2.micro
+        Monitoring:
+          Enabled: true
